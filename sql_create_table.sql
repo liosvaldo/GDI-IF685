@@ -1,6 +1,6 @@
 CREATE TABLE cep ( 
-	cep NUMBER, 
-	rua VARCHAR2(6), 
-	cidade VARCHAR2(6), 
-	CONSTRAINT cep_pk PRIMARY KEY (cep)
-)
+	cep 					NUMBER 					NOT NULL,
+	rua 					VARCHAR2(6)				NOT NULL, 
+	cidade 					VARCHAR2(6)				NOT NULL, 
+	CONSTRAINT cep_pk 		PRIMARY KEY (cep)
+);
