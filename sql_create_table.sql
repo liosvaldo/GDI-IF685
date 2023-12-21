@@ -9,6 +9,16 @@ DROP TABLE eletrocentro;
 DROP TABLE se_coletora;
 DROP TABLE ponto_conexao;
 
+DROP TABLE produto_energia;
+
+CREATE TABLE produto_energia(
+    id_produto NUMBER NOT NULL,
+    prazo_de_entrega VARCHAR2(8),
+    quantidade_kw NUMBER,
+    data_de_venda VARCHAR2(8),
+    CONSTRAINT produto_energia_pk PRIMARY KEY (id_produto)
+);
+
 CREATE TABLE operador(
     matricula               number                    ,
     nome                    varchar2(60)            NOT NULL,
