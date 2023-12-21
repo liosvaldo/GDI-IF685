@@ -134,7 +134,123 @@ CREATE TABLE instalacao(
     CONSTRAINT  id_eletrocentro_fk                  FOREIGN KEY     (id_eletrocentro)   REFERENCES  eletrocentro(id)
 );
 
+CREATE TABLE produto_energia(
+
+    id                      NUMBER                  NOT NULL,
+    id_ponto_conexao        NUMBER                  NOT NULL,
+    quantidade_kw           NUMBER                  NOT NULL,
+    data_venda              DATE                    NOT NULL,
+    prazo_entrega           DATE                    NOT NULL,
+    CONSTRAINT id_produto_energia_pk                PRIMARY KEY     (id),
+    CONSTRAINT id_ponto_conexao_produto_energia_fk                  FOREIGN KEY     (id_ponto_conexao)  REFERENCES ponto_conexao(id)
+
+);
+
+CREATE TABLE medidor_instalacao(
+    id_medidor          NUMBER                      NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    numero_de_serie     NUMBER                      NOT NULL,
+    numero_de_prioridade NUMBER                     NOT NULL,
+    CONSTRAINT id_medidor_instalacao_pk             PRIMARY KEY     (id_medidor),
+    CONSTRAINT id_conexao_instalacao_fk             FOREIGN KEY     (id_conexao)        REFERENCES instalacao(id)
+);
+
+CREATE TABLE gerecao_instalacao(
+    timestemp           DATE                        NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    potência            NUMBER                      NOT NULL,
+    CONSTRAINT geracao_instalacao_pk              PRIMARY KEY     (timestemp, id_conexao),
+    CONSTRAINT id_geracao_instalacao_fk             FOREIGN KEY     (id_conexao)        REFERENCES instalacao(id)
+);
+
+CREATE TABLE medidor_eletrocentro(
+    id_medidor          NUMBER                      NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    numero_de_serie     NUMBER                      NOT NULL,
+    numero_de_prioridade NUMBER                     NOT NULL,
+    CONSTRAINT id_medidor_eletrocentro_pk           PRIMARY KEY     (id_medidor),
+    CONSTRAINT id_conexao_eletrocentro_fk           FOREIGN KEY     (id_conexao)        REFERENCES eletrocentro(id)
+);
+
+CREATE TABLE gerecao_eletrocentro(
+    timestemp           DATE                        NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    potência            NUMBER                      NOT NULL,
+    CONSTRAINT geracao_eletrocentro_pk              PRIMARY KEY     (timestemp, id_conexao),
+    CONSTRAINT id_geracao_eletrocentro_fk           FOREIGN KEY     (id_conexao)        REFERENCES eletrocentro(id)
+);
 
 
+CREATE TABLE medidor_se_coletora(
+    id_medidor          NUMBER                      NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    numero_de_serie     NUMBER                      NOT NULL,
+    numero_de_prioridade NUMBER                     NOT NULL,
+    CONSTRAINT id_medidor_se_coletora_pk            PRIMARY KEY     (id_medidor),
+    CONSTRAINT id_conexao_se_coletora_fk            FOREIGN KEY     (id_conexao)        REFERENCES se_coletora(id)
+);
 
+CREATE TABLE gerecao_se_coletora(
+    timestemp           DATE                        NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    potência            NUMBER                      NOT NULL,
+    CONSTRAINT geracao_se_coletora_pk               PRIMARY KEY     (timestemp, id_conexao),
+    CONSTRAINT id_geracao_se_coletora_fk            FOREIGN KEY     (id_conexao)        REFERENCES se_coletora(id)
+);
 
+CREATE TABLE medidor_ponto_conexao(
+    id_medidor          NUMBER                      NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    numero_de_serie     NUMBER                      NOT NULL,
+    numero_de_prioridade NUMBER                     NOT NULL,
+    CONSTRAINT id_medidor_pk                        PRIMARY KEY     (id_medidor),
+    CONSTRAINT id_conexao_ponto_conexao_fk          FOREIGN KEY     (id_conexao)        REFERENCES ponto_conexao(id)
+);
+
+CREATE TABLE gerecao_ponto_conexao(
+    timestemp           DATE                        NOT NULL,
+    id_conexao          NUMBER                      NOT NULL,
+    potência            NUMBER                      NOT NULL,
+    CONSTRAINT geracao_ponto_conexao_pk             PRIMARY KEY     (timestemp, id_conexao),
+    CONSTRAINT id_geracao_ponto_conexao_fk          FOREIGN KEY     (id_conexao)        REFERENCES  ponto_conexao(id)
+);
+
+CREATE TABLE pessoa(
+
+    id                  NUMBER                      NOT NULL,
+    nome                VARCHAR2(100)               NOT NULL,
+    CONSTRAINT id_pessoa_pk                         PRIMARY KEY     (id,nome)
+);
+
+CREATE TABLE pessoa_fisica(
+
+    id                  NUMBER                      NOT NULL,
+    nome                VARCHAR2(100)               NOT NULL,
+    cpf                 varchar2(20)                NOT NULL,
+    CONSTRAINT pessoa_fisica_pk                     PRIMARY KEY     (id, nome),
+    CONSTRAINT id_pessoa_fisica_fk                  FOREIGN KEY     (id, nome)                REFERENCES pessoa(id, nome),
+    CONSTRAINT  cpf_pessoa_fisica_ck                CHECK           (cpf LIKE '___.___.___-__')
+
+);
+
+CREATE TABLE pessoa_juridica(
+
+    id                  NUMBER                      NOT NULL,
+    nome_fantasia       VARCHAR2(100)               NOT NULL,
+    cnpj                varchar2(20)                NOT NULL,
+    CONSTRAINT id_pessoa_juridica_pk                PRIMARY KEY     (id, nome_fantasia),
+    CONSTRAINT id_pessoa_juridica_fk                FOREIGN KEY     (id, nome_fantasia)                REFERENCES pessoa(id, nome ),
+    CONSTRAINT  cnpj_pessoa_juridica_ck             CHECK           (cnpj LIKE '__.___.___/000_-__')
+
+);
+
+CREATE TABLE telefone_pessoa(
+
+    id                  NUMBER                      NOT NULL,
+    id_pessoa           NUMBER                      NOT NULL,
+    nome                VARCHAR2(100)               NOT NULL,
+    ddd                 NUMBER                      NOT NULL,
+    telefone            NUMBER                      NOT NULL,
+    CONSTRAINT id_telefone_pessoa_pk                PRIMARY KEY     (id),
+    CONSTRAINT id_telefone_pessoa_fk                FOREIGN KEY     (id_pessoa, nome)         REFERENCES pessoa(id, nome)
+);
