@@ -1,46 +1,49 @@
-DROP TABLE operador;
-DROP TABLE cep;
-DROP TABLE modelo_inversor;
-DROP TABLE modelo_painel;
-DROP TABLE modelo_eletrocentro;
-DROP TABLE conjunto;
+DROP TABLE telefone_pessoa;
+DROP TABLE pessoa_juridica;
+DROP TABLE pessoa_fisica;
+DROP TABLE pessoa;
+DROP TABLE gerecao_ponto_conexao;
+DROP TABLE medidor_ponto_conexao;
+DROP TABLE gerecao_se_coletora;
+DROP TABLE medidor_se_coletora;
+DROP TABLE gerecao_eletrocentro;
+DROP TABLE medidor_eletrocentro;
+DROP TABLE gerecao_instalacao;
+DROP TABLE medidor_instalacao;
+DROP TABLE produto_energia;
 DROP TABLE instalacao;
 DROP TABLE eletrocentro;
 DROP TABLE se_coletora;
 DROP TABLE ponto_conexao;
+DROP TABLE conjunto;
+DROP TABLE modelo_eletrocentro;
+DROP TABLE modelo_painel;
+DROP TABLE modelo_inversor;
+DROP TABLE operador;
+DROP TABLE cep;
 
-DROP TABLE produto_energia;
 
-CREATE TABLE produto_energia(
-    id_produto NUMBER NOT NULL,
-    prazo_de_entrega VARCHAR2(8),
-    quantidade_kw NUMBER,
-    data_de_venda VARCHAR2(8),
-    CONSTRAINT produto_energia_pk PRIMARY KEY (id_produto)
+CREATE TABLE cep(
+
+	cep 					varchar2(9) 					NOT NULL,
+	rua 					VARCHAR2(50)						,
+	cidade 					VARCHAR2(50)						,
+	CONSTRAINT cep_pk 		PRIMARY KEY (cep),
+	CONSTRAINT cep_fk       CHECK (cep LIKE '_____-___')
+
 );
+
 
 CREATE TABLE operador(
     matricula               number                    ,
     nome                    varchar2(60)            NOT NULL,
     cpf                     varchar2(14)            NOT NULL,
-    rua                     varchar2(30)            NOT NULL,
     numero                  number                  NOT NULL,
     complemento             varchar2(30)                    ,
-    cidade                  varchar2(30)            NOT NULL,
-    cep                     varchar2(9)             NOT NULL,
+    cep                     varchar2(20)             NOT NULL,
     CONSTRAINT  matricula_pk                        PRIMARY KEY     (matricula),
     CONSTRAINT  cpf_ck                              CHECK           (cpf LIKE '___.___.___-__'),
-    CONSTRAINT  cep_ck                              CHECK           (cep LIKE '_____-___')
-);
-
-CREATE TABLE cep(
-
-	cep 					NUMBER 					NOT NULL,
-	rua 					VARCHAR2(6)						,
-	cidade 					VARCHAR2(6)						,
-	CONSTRAINT cep_pk 		PRIMARY KEY (cep),
-	CONSTRAINT cep_fk       CHECK (cep LIKE '______-___)')
-
+    CONSTRAINT  cep_operador_fk                              FOREIGN KEY     (cep)   REFERENCES          cep(cep)
 );
 
 CREATE TABLE modelo_inversor(
@@ -69,7 +72,7 @@ CREATE TABLE modelo_painel(
 
 CREATE TABLE modelo_eletrocentro(
 
-	modelo					NUMBER					        ,
+	modelo					VARCHAR2(30)					        ,
 	fabricante				VARCHAR2(6)						,
 	pot_nom					NUMBER				    NOT NULL,
 	tensao_nom  			NUMBER					NOT NULL,
@@ -116,7 +119,7 @@ CREATE TABLE se_coletora(
 
 CREATE TABLE eletrocentro(
     id                      number                          ,
-    id_modelo_eletrocentro  number                  NOT NULL,
+    id_modelo_eletrocentro  VARCHAR2(30)                  NOT NULL,
     id_operador             number                  NOT NULL,
     id_supervisor           number                  NOT NULL,
     id_coletora             number                  NOT NULL,
