@@ -174,3 +174,4 @@ INSERT INTO telefone_pessoa (id, id_pessoa, nome, ddd, telefone) VALUES
 (0005, 0005, 'California Hidro', 081, 21169403);
 INSERT INTO telefone_pessoa (id, id_pessoa, nome, ddd, telefone) VALUES
 (0006, 0006, 'Ares Energia', 081, 21110560);
+
