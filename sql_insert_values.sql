@@ -45,25 +45,25 @@ INSERT INTO ponto_conexao(id, nome, pot_nom, estado, cidade, latitude, longitude
 (0003, 'ITAU', 69, 'AL', 'salvador', 2.12345, -1.23456);
 
 INSERT INTO se_coletora(id, nome_parque, id_ponto_conexao, pot_nom, tensao_nom, taxa_conversao, latitude, longitude) VALUES
-(001, 'ITABAIANA', 0001, 500, 13400, 50, 2.12345, -1.23456);
+(0001, 'ITABAIANA', 0001, 500, 13400, 50, 2.12345, -1.23456);
 INSERT INTO se_coletora(id, nome_parque, id_ponto_conexao, pot_nom, tensao_nom, taxa_conversao, latitude, longitude) VALUES
-(002, 'ITABAIANA', 0002, 230, 13400, 50, 2.12345, -1.23456);
+(0002, 'ITABAIANA', 0002, 230, 13400, 50, 2.12345, -1.23456);
 INSERT INTO se_coletora(id, nome_parque, id_ponto_conexao, pot_nom, tensao_nom, taxa_conversao, latitude, longitude) VALUES
-(003, 'ITABAIANA', 0003, 69, 13400, 50, 2.12345, -1.23456);
+(0003, 'ITABAIANA', 0003, 69, 13400, 50, 2.12345, -1.23456);
 
 INSERT INTO eletrocentro(id, id_modelo_eletrocentro, id_operador, id_supervisor, id_coletora, latitude, longitude) VALUES
-(0001, 'AAA', 0001, 0002, 2.12345, -1.23456);
+(0001, 'AAA', 0001, 0002, 001 ,2.12345, -1.23456);
 INSERT INTO eletrocentro(id, id_modelo_eletrocentro, id_operador, id_supervisor, id_coletora, latitude, longitude) VALUES
-(0002, 'BBB', 0002, 0003, 2.12345, -1.23456);
+(0002, 'BBB', 0002, 0003, 002 ,2.12345, -1.23456);
 INSERT INTO eletrocentro(id, id_modelo_eletrocentro, id_operador, id_supervisor, id_coletora, latitude, longitude) VALUES
-(0003, 'CCC', 0003, 0001, 2.12345, -1.23456);
+(0003, 'CCC', 0003, 0001, 003 ,2.12345, -1.23456);
 
 INSERT INTO instalacao(id, id_conjunto, id_operador, id_supervisor, id_eletrocentro, latitude, longitude) VALUES
 (0001, 0001, 0001, 0002, 0001, 2.12345, -1.23456);
 INSERT INTO instalacao(id, id_conjunto, id_operador, id_supervisor, id_eletrocentro, latitude, longitude) VALUES
 (0002, 0002, 0002, 0003, 0002, 2.12345, -1.23456);
 INSERT INTO instalacao(id, id_conjunto, id_operador, id_supervisor, id_eletrocentro, latitude, longitude) VALUES
-(0002, 0003, 0002, 0003, 0003, 2.12345, -1.23456);
+(0003, 0003, 0002, 0003, 0003, 2.12345, -1.23456);
 
 INSERT INTO produto_energia(id, id_ponto_conexao, quantidade_kw, data_venda, prazo_entrega) VALUES
 (0001, 0001, 32, to_date('13/12/2005', 'dd/mm/yy'), to_date('13/04/2006', 'dd/mm/yy'));
@@ -72,66 +72,60 @@ INSERT INTO produto_energia(id, id_ponto_conexao, quantidade_kw, data_venda, pra
 INSERT INTO produto_energia(id, id_ponto_conexao, quantidade_kw, data_venda, prazo_entrega) VALUES
 (0003, 0003, 15, to_date('18/12/2005', 'dd/mm/yy'), to_date('18/04/2006', 'dd/mm/yy'));
 
-INSERT INTO ponto_conexao (id, nome, pot_nom, estado, cidade, latitude, longitude) VALUES 
-(0003, "Conexão 1", 300, "Pernambuco", "Recife", -8, -34);
-INSERT INTO ponto_conexao (id, nome, pot_nom, estado, cidade, latitude, longitude) VALUES 
-(0005, "Conexão 2", 300, "Pernambuco", "Recife", -8, -34);
-INSERT INTO ponto_conexao (id, nome, pot_nom, estado, cidade, latitude, longitude) VALUES 
-(0008, "Conexão 3", 300, "Pernambuco", "Caruaru", -8, -35);
 
 INSERT INTO medidor_instalacao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0001, 0003, 123, 111);
+(0001, 0001, 123, 111);
 INSERT INTO medidor_instalacao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0002, 0005, 456, 222);
+(0002, 0002, 456, 222);
 INSERT INTO medidor_instalacao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0003, 0008, 789, 333);
+(0003, 0003, 789, 333);
 
 INSERT INTO gerecao_instalacao(timestemp,id_conexao, potência) VALUES
-(to_date('21/12/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/12/2005', 'dd/mm/yy'), 0001, 300);
 INSERT INTO gerecao_instalacao(timestemp,id_conexao, potência) VALUES
-(to_date('21/01/2005', 'dd/mm/yy'), 0005, 300);
+(to_date('21/01/2005', 'dd/mm/yy'), 0002, 300);
 INSERT INTO gerecao_instalacao(timestemp,id_conexao, potência) VALUES
-(to_date('21/02/2005', 'dd/mm/yy'), 0008, 300);
+(to_date('21/02/2005', 'dd/mm/yy'), 0003, 300);
 
 INSERT INTO medidor_eletrocentro(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0001, 0003, 321, 111);
+(0001, 0001, 321, 111);
 INSERT INTO medidor_eletrocentro(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0002, 0005, 654, 222);
+(0002, 0002, 654, 222);
 INSERT INTO medidor_eletrocentro(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0003, 0008, 987, 333);
+(0003, 0003, 987, 333);
 
 INSERT INTO gerecao_eletrocentro(timestemp, id_conexao, potência) VALUES
-(to_date('21/12/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/12/2005', 'dd/mm/yy'), 0001, 300);
 INSERT INTO gerecao_eletrocentro(timestemp, id_conexao, potência) VALUES
-(to_date('21/01/2005', 'dd/mm/yy'), 0005, 300);
+(to_date('21/01/2005', 'dd/mm/yy'), 0002, 300);
 INSERT INTO gerecao_eletrocentro(timestemp, id_conexao, potência) VALUES
-(to_date('21/02/2005', 'dd/mm/yy'), 0008, 300);
+(to_date('21/02/2005', 'dd/mm/yy'), 0003, 300);
 
 INSERT INTO medidor_se_coletora(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0001, 0003, 333, 111);
+(0001, 0001, 333, 111);
 INSERT INTO medidor_se_coletora(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0002, 0005, 334, 222);
+(0002, 0002, 334, 222);
 INSERT INTO medidor_se_coletora(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0003, 0008, 335, 333);
+(0003, 0003, 335, 333);
 
 INSERT INTO gerecao_se_coletora(timestemp, id_conexao, potência) VALUES
-(to_date('21/12/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/12/2005', 'dd/mm/yy'), 0001, 300);
 INSERT INTO gerecao_se_coletora(timestemp, id_conexao, potência) VALUES
-(to_date('21/01/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/01/2005', 'dd/mm/yy'), 0002, 300);
 INSERT INTO gerecao_se_coletora(timestemp, id_conexao, potência) VALUES
 (to_date('21/02/2005', 'dd/mm/yy'), 0003, 300);
 
 INSERT INTO medidor_ponto_conexao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0001, 0003, 553, 111);
+(0001, 0001, 553, 111);
 INSERT INTO medidor_ponto_conexao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0002, 0005, 554, 222);
+(0002, 0002, 554, 222);
 INSERT INTO medidor_ponto_conexao(id_medidor, id_conexao, numero_de_serie, numero_de_prioridade) VALUES
-(0003, 0008, 555, 333);
+(0003, 0003, 555, 333);
 
 INSERT INTO gerecao_ponto_conexao(timestemp, id_conexao, potência) VALUES
-(to_date('21/12/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/12/2005', 'dd/mm/yy'), 0001, 300);
 INSERT INTO gerecao_ponto_conexao(timestemp, id_conexao, potência) VALUES
-(to_date('21/01/2005', 'dd/mm/yy'), 0003, 300);
+(to_date('21/01/2005', 'dd/mm/yy'), 0002, 300);
 INSERT INTO gerecao_ponto_conexao(timestemp, id_conexao, potência) VALUES
 (to_date('21/02/2005', 'dd/mm/yy'), 0003, 300);
 
