@@ -55,8 +55,6 @@ WHILE end_loop2 == 1 LOOP
 dbms_output.put(C_opr);
 END
 
-
-
 --procedimento reutilizavel para adicionar em tabela operador
 DECLARE
 CREATE OR REPLACE PROCEDURE insere_operador(
@@ -118,6 +116,7 @@ BEGIN
 END CASE;
 RETURN rua_final2
 
+--usando loop for in para contar o numero de eletrocentros
 DECLARE
 indice3 NUMBER;
 SELECT max(id) INTO indice3 FROM eletrocentro
@@ -127,7 +126,7 @@ D_elt tabela_sec_eletro;
 m NUMBER;
 m := 0
 BEGIN
-FOR m in 0..indice3 LOOP 
+FOR m IN 0..indice3 LOOP 
     ALTER TABLE D_elt ADD(id(m) FROM eletrocentro);
 END
 
@@ -200,4 +199,35 @@ CURSOR cur_eletro IS
         END LOOP;
 END list_mod_eletrocentro;
 END registro_eletrocentros;
+
+--trigger para prevenção de deixar a tabela operador vazia
+CREATE OR REPLACE TRIGGER demitir_operador
+BEFORE DELETE ON operador
+DECLARE
+	id NUMBER;
+BEGIN
+	SELECT COUNT(*) INTO matricula 
+	FROM operador;
+	IF  matricula = 1 THEN	
+		RAISE_APPLICATION_ERROR(-011, 'Não se pode deixar o parque de energia solar sem nenhum operador.');
+	END IF;
+END demitir_operador;
+
+--trigger para prevenir que uma SE Coletora se conecte com mais de um ponto de conexão
+CREATE OR REPLACE TRIGGER controle_se_coletora BEFORE INSERT ON se_coletora
+FOR EACH ROW
+DECLARE
+	se_conecta se_coletora.id_ponto_conexao%TYPE;
+BEGIN
+	SELECT id_ponto_conexao INTO se_conecta
+	FROM se_coletora
+	WHERE id_ponto_conexao =:NEW.id_ponto_conexao;
+	IF se_conecta IS NOT NULL THEN
+RAISE_APPLICATION_ERROR(-012,'Esta SE Coletora já esta conectada a um ponto de conexão!');
+	END IF;
+
+	EXCEPTION
+		WHEN NO_DATA_FOUND THEN
+			dbms_output.put_line('SE Coletora conectada com sucesso');
+END;
 
