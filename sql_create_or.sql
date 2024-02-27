@@ -1,8 +1,18 @@
---Criação de tipos:
+-- Criação de tipos
 CREATE OR REPLACE TYPE tp_endereco AS OBJECT
 (
     cidade VARCHAR2(50),
     estado CHAR(2) -- Só permitido siglas de estado
+);
+/
+
+CREATE OR REPLACE TYPE tp_enderecoOperador AS OBJECT
+(
+    cep NUMBER,
+    cidade VARCHAR2(50),
+    rua VARCHAR2(40),
+    numero NUMBER,
+    complemento VARCHAR2(50)
 );
 /
 
@@ -57,12 +67,13 @@ CREATE OR REPLACE TYPE BODY tp_pessoa AS
     END;
 END;
 /
-
+    
 CREATE OR REPLACE TYPE tp_pessoaFisica UNDER tp_pessoa
 (
     cpf NUMBER
-) FINAL;
-/
+) NOT FINAL NOT INSTANTIABLE;
+/ 
+-- caso fosse criar clientes.
 
 CREATE OR REPLACE TYPE tp_pessoaJuridica UNDER tp_pessoa
 (
@@ -89,19 +100,14 @@ CREATE OR REPLACE TYPE tp_pontoConexao AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_eletrocentro AS OBJECT
+CREATE OR REPLACE TYPE tp_modeloEletrocentro AS OBJECT
 (
-    id_eletrocentro NUMBER,
-    localizacao tp_localizacao
-);
-/
-
-CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
-(
-    id_medidor NUMBER,
-    num_de_serie NUMBER,
-    num_prioridade NUMBER,
-    pontoConexao REF tp_pontoConexao
+    modelo VARCHAR2(40),
+    fabricante VARCHAR2(40),
+    tensao_nom NUMBER,
+    autonomia_baterias VARCHAR2(40),
+    corr_max_baterias NUMBER,
+    pont_nom NUMBER
 );
 /
 
@@ -113,6 +119,24 @@ CREATE OR REPLACE TYPE tp_seColetora AS OBJECT
     localizacao tp_localizacao,
     id_sistema tp_id_sistema,
     seConecta REF tp_pontoConexao
+);
+/
+
+CREATE OR REPLACE TYPE tp_eletrocentro AS OBJECT
+(
+    id_eletrocentro NUMBER,
+    localizacao tp_localizacao,
+    eletrocentro REF tp_modeloEletrocentro,
+    eletrocentroseconectacoletora REF tp_secoletora
+);
+/
+
+CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
+(
+    id_medidor NUMBER,
+    num_de_serie NUMBER,
+    num_prioridade NUMBER,
+    pontoConexao REF tp_pontoConexao
 );
 /
 
@@ -134,23 +158,80 @@ CREATE OR REPLACE TYPE tp_medidorEletrocentro AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_modeloEletrocentro AS OBJECT
-(
-    modelo VARCHAR2(40),
-    fabricante VARCHAR2(40),
-    tensao_nom NUMBER,
-    autonomia_baterias VARCHAR2(40),
-    corr_max_baterias NUMBER,
-    pont_nom NUMBER
-);
-/
-
 CREATE OR REPLACE TYPE tp_negocia AS OBJECT
 (
     idNegociacao NUMBER,
     pessoaNegocia REF tp_pessoa,
     produtoEnergiaNegocia REF tp_produtoEnergia,
     pontoConexaoNegocia REF tp_pontoConexao
+);
+/
+
+CREATE OR REPLACE TYPE tb_modeloinversor AS OBJECT
+(
+    modelo varchar2(40),
+    pot_nom_ca number,
+    num_entradas_cc number,
+    pot_max_ca number,
+    pot_max_cc number,
+    tensao_max_cc number,
+    fabricante varchar2(40)
+);
+/
+
+CREATE OR REPLACE TYPE tp_temp_operacao AS OBJECT
+(
+    temp_max number,
+    temp_min number
+);
+/
+
+CREATE OR REPLACE TYPE tb_modelopainel AS OBJECT
+(
+    modelo varchar2(40),
+    fabricante varchar2(40),
+    pot_max number,
+    tensao_max_func number,
+    corrente_pico number,
+    temp_operacao tp_temp_operacao
+);
+/
+
+CREATE OR REPLACE TYPE tp_instalacao AS OBJECT
+(
+    id_instalacao number,
+    localizacao tp_localizacao,
+    seconectaeletrocentro REF tp_eletrocentro
+);
+/
+
+CREATE OR REPLACE TYPE tp_conjunto AS OBJECT
+(
+    id number,
+    seconectaModeloinversor REF tb_modeloinversor,
+    possuimodelopainel REF tb_modelopainel,
+    conjuntoproduz REF tp_instalacao
+);
+/
+
+CREATE OR REPLACE TYPE tp_medidorinstalacao AS OBJECT
+(
+    id_medidor number,
+    num_serie number,
+    num_prioridade number,
+    geracaoinstalacao REF tp_instalacao
+);
+/
+    
+CREATE OR REPLACE TYPE tp_operador AS OBJECT
+(
+    matricula number,
+    nome varchar2(40),
+    cpf number,
+    endereco tp_enderecoOperador,
+    supervisor REF tp_operador,
+    atuaemeletrocentro REF tp_eletrocentro,
+    atuaemInstalacao REF tp_instalacao
 );
 /
 
@@ -166,13 +247,10 @@ CREATE TYPE tp_lista_medidorEletrocentro AS TABLE OF tp_medidorEletrocentro;
 CREATE TYPE tp_lista_MedidorseColetora AS TABLE OF tp_MedidorseColetora;
 /
 
+CREATE TYPE tp_lista_medidorinstalacao AS TABLE OF tp_medidorinstalacao;
+/
+
 --Criando tabelas:
-
-CREATE TABLE tb_pessoaFisica OF tp_pessoaFisica;
-/
-
-CREATE TABLE tb_pessoaJuridica OF tp_pessoaJuridica;
-/
 
 CREATE TABLE tb_pessoa OF tp_pessoa
 (
@@ -200,6 +278,14 @@ CREATE TABLE tb_geracaoEletrocentro
     timestamp_geracao DATE,
     medidorEletrocentro tp_lista_medidorEletrocentro
 ) NESTED TABLE medidorEletrocentro STORE AS tb_medidorEletrocentro;
+/
+
+CREATE TABLE tb_geracaoinstalacao
+(
+    timestamp_geracaoInstalacao date,
+    potencia number,
+    medidoresinstalacao tp_lista_medidorinstalacao
+) NESTED TABLE medidoresinstalacao STORE AS tb_medidorgeracaoinstalacao;
 /
 
 CREATE TABLE tb_geracaoSEColetora
