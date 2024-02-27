@@ -29,6 +29,13 @@ CREATE OR REPLACE TYPE tp_localizacao AS OBJECT
 );
 /
 
+CREATE OR REPLACE TYPE tp_id_sistema AS OBJECT
+(
+    nome_parque varchar2(40),
+    pot_nom number
+);
+/
+
 CREATE OR REPLACE TYPE tp_identificacaoSistema AS OBJECT
 (
     nome VARCHAR2(40),
@@ -110,6 +117,9 @@ CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
 );
 /
 
+CREATE TABLE tb_possuiGeracaoPontoDeConexao OF tp_medidorPontoDeConexao;
+/
+    
 CREATE OR REPLACE TYPE tp_pontoConexao AS OBJECT
 (
     id NUMBER,
@@ -120,7 +130,21 @@ CREATE OR REPLACE TYPE tp_pontoConexao AS OBJECT
 );
 /
 
-CREATE TABLE tb_possuiGeracaoPontoDeConexao OF tp_medidorPontoDeConexao;
+CREATE OR REPLACE TYPE tp_seColetora AS OBJECT
+(
+    id number,
+    tensao_nom number,
+    taxa_de_conversao number,
+    localização tp_localizacao,
+    id_sistema tp_id_sistema,
+    seConecta REF tp_pontoConexao
+);
+/
+
+CREATE TABLE tb_seColetora OF tp_seColetora
+(
+    PRIMARY KEY (id)
+);
 /
     
 CREATE OR REPLACE TYPE tp_negocia AS OBJECT
@@ -141,3 +165,4 @@ CREATE TABLE tb_lista_negociacoes
     negociacoes tp_lista_negociacoes
 ) NESTED TABLE negociacoes STORE AS tb_negociacao_negociacoes;
 /
+
