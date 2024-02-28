@@ -2,18 +2,41 @@
 CREATE OR REPLACE TYPE tp_endereco AS OBJECT
 (
     cidade VARCHAR2(50),
-    estado CHAR(2) -- Só permitido siglas de estado
+    estado CHAR(2), -- Só permitido siglas de estado
+    
+    MEMBER PROCEDURE atualizar_endereco(novo_cep NUMBER, nova_cidade VARCHAR2, nova_rua VARCHAR2, novo_numero NUMBER, novo_complemento VARCHAR2)
+) NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE BODY tp_endereco AS
+    MEMBER PROCEDURE atualizar_endereco(novo_cep NUMBER, nova_cidade VARCHAR2, nova_rua VARCHAR2, novo_numero NUMBER, novo_complemento VARCHAR2) IS
+    BEGIN
+        -- Implementação da MEMBER PROCEDURE
+        NULL; -- Adicione a lógica de atualização aqui conforme necessário
+    END atualizar_endereco;
+END;
+/
+
+-- Agora você pode criar o subtipo tp_enderecoOperador
+CREATE OR REPLACE TYPE tp_enderecoOperador UNDER tp_endereco (
+    cep NUMBER,
+    rua VARCHAR2(40),
+    numero NUMBER,
+    complemento VARCHAR2(50),
+
+    OVERRIDING MEMBER PROCEDURE atualizar_endereco(novo_cep NUMBER, nova_cidade VARCHAR2, nova_rua VARCHAR2, novo_numero NUMBER, novo_complemento VARCHAR2)
 );
 /
 
-CREATE OR REPLACE TYPE tp_enderecoOperador AS OBJECT
-(
-    cep NUMBER,
-    cidade VARCHAR2(50),
-    rua VARCHAR2(40),
-    numero NUMBER,
-    complemento VARCHAR2(50)
-);
+CREATE OR REPLACE TYPE BODY tp_enderecoOperador AS
+    OVERRIDING MEMBER PROCEDURE atualizar_endereco(novo_cep NUMBER, nova_cidade VARCHAR2, nova_rua VARCHAR2, novo_numero NUMBER, novo_complemento VARCHAR2) IS
+    BEGIN
+        -- Implementação da OVERRIDING MEMBER PROCEDURE
+        -- Pode chamar o método na superclasse usando o seguinte
+        SELF AS tp_endereco.MEMBER PROCEDURE atualizar_endereco(novo_cep, nova_cidade, nova_rua, novo_numero, novo_complemento);
+        -- Adicione a lógica específica do subtipo aqui
+    END atualizar_endereco;
+END;
 /
 
 CREATE OR REPLACE TYPE tp_localizacao AS OBJECT
@@ -40,8 +63,29 @@ CREATE OR REPLACE TYPE tp_identificacaoSistema AS OBJECT
 CREATE OR REPLACE TYPE tp_telefone AS OBJECT 
 (
     cod_area VARCHAR2(2),
-    fone VARCHAR2(10)
+    fone VARCHAR2(10),
+
+    -- ORDER MEMBER FUNCTION
+    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER
 );
+/
+
+CREATE TYPE BODY tp_telefone AS
+    -- ORDER MEMBER FUNCTION Implementation
+    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER IS
+    BEGIN
+        -- Implemente a lógica de comparação aqui e retorne -1, 0 ou 1
+        -- dependendo da relação de ordem entre o telefone atual e outro_telefone.
+        -- Exemplo simples:
+        IF SELF.cod_area < another_telefone.cod_area THEN
+            RETURN -1;
+        ELSIF SELF.cod_area > another_telefone.cod_area THEN
+            RETURN 1;
+        ELSE
+            RETURN 0;
+        END IF;
+    END compare;
+END;
 /
 
 CREATE TYPE lista_tp_fone AS VARRAY(2) OF tp_telefone;
@@ -53,7 +97,8 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT
     nome VARCHAR2(50),
     telefones lista_tp_fone,
 
-    CONSTRUCTOR FUNCTION tp_pessoa(SELF IN OUT NOCOPY tp_pessoa, ID NUMBER, Nome VARCHAR2, Telefones lista_tp_fone) RETURN SELF AS RESULT
+    CONSTRUCTOR FUNCTION tp_pessoa(SELF IN OUT NOCOPY tp_pessoa, ID NUMBER, Nome VARCHAR2, Telefones lista_tp_fone) RETURN SELF AS RESULT,
+    MAP MEMBER FUNCTION obter_cod_area RETURN VARCHAR2
 ) NOT FINAL;
 /
 
@@ -64,7 +109,16 @@ CREATE OR REPLACE TYPE BODY tp_pessoa AS
         SELF.nome := Nome; 
         SELF.telefones := Telefones;
         RETURN;
-    END;
+
+    MAP MEMBER FUNCTION obter_cod_area RETURN VARCHAR2 IS
+        result VARCHAR2(4000);
+    BEGIN
+        result := '';
+        FOR i IN 1..self.telefones.COUNT LOOP
+            result := result || self.telefones(i).cod_area || ', ';
+        END LOOP;
+        RETURN RTRIM(result, ', '); -- Remover a última vírgula e espaço
+    END obter_cod_area;
 END;
 /
     
@@ -167,7 +221,7 @@ CREATE OR REPLACE TYPE tp_negocia AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tb_modeloinversor AS OBJECT
+CREATE OR REPLACE TYPE tp_modeloinversor AS OBJECT
 (
     modelo varchar2(40),
     pot_nom_ca number,
@@ -208,7 +262,7 @@ CREATE OR REPLACE TYPE tp_instalacao AS OBJECT
 CREATE OR REPLACE TYPE tp_conjunto AS OBJECT
 (
     id number,
-    seconectaModeloinversor REF tb_modeloinversor,
+    seconectaModeloinversor REF tp_modeloinversor,
     possuimodelopainel REF tb_modelopainel,
     conjuntoproduz REF tp_instalacao
 );
@@ -302,3 +356,71 @@ CREATE TABLE tb_lista_negociacoes
     negociacoes tp_lista_negociacoes
 ) NESTED TABLE negociacoes STORE AS tb_negociacoes;
 /
+
+-- Tabela para tp_produtoEnergia
+CREATE TABLE tb_produtoEnergia OF tp_produtoEnergia
+(
+    id_produto PRIMARY KEY
+);
+/
+
+-- Tabela para tp_modeloEletrocentro
+CREATE TABLE tb_modeloEletrocentro OF tp_modeloEletrocentro
+(
+    modelo PRIMARY KEY
+);
+/
+
+-- Tabela para tp_eletrocentro
+CREATE TABLE tb_eletrocentro OF tp_eletrocentro
+(
+    id_eletrocentro PRIMARY KEY
+);
+/
+-- Tabela para tp_medidorPontoDeConexao
+CREATE TABLE tb_medidorPontoDeConexao OF tp_medidorPontoDeConexao
+(
+    id_medidor PRIMARY KEY
+);
+/
+
+-- Tabela para tp_negocia
+CREATE TABLE tb_negocia OF tp_negocia
+(
+    idNegociacao PRIMARY KEY
+);
+/
+-- Tabela para tb_modeloinversor
+CREATE TABLE tb_modeloinversor OF tp_modeloinversor
+(
+    modelo PRIMARY KEY
+);
+/
+
+-- Tabela para tp_instalacao
+CREATE TABLE tb_instalacao OF tp_instalacao
+(
+    id_instalacao PRIMARY KEY
+);
+/
+-- Tabela para tp_conjunto
+CREATE TABLE tb_conjunto OF tp_conjunto
+(
+    id PRIMARY KEY
+);
+/
+-- Tabela para tp_medidorinstalacao
+CREATE TABLE tb_medidorinstalacao OF tp_medidorinstalacao
+(
+    id_medidor PRIMARY KEY
+);
+/
+-- Tabela para tp_operador
+CREATE TABLE tb_operador OF tp_operador
+(
+    matricula PRIMARY KEY
+);
+/
+
+--Alteração:
+ALTER TYPE tp_modeloinversor DROP ATTRIBUTE pot_max_cc CASCADE;
