@@ -424,3 +424,24 @@ CREATE TABLE tb_operador OF tp_operador
 
 --Alteração:
 ALTER TYPE tp_modeloinversor DROP ATTRIBUTE pot_max_cc CASCADE;
+
+
+--Inserindo valores
+
+-- Inserindo dados na tb_pessoa
+INSERT INTO tb_pessoa VALUES (1, 'João', lista_tp_fone(tp_telefone('11', '123456789'), tp_telefone('22', '987654321')));
+
+-- Inserindo dados na tb_modeloEletrocentro
+INSERT INTO tb_modeloEletrocentro VALUES ('ModeloX', 'FabricanteX', 220, '4 horas', 100, 50);
+
+-- Inserindo dados na tb_eletrocentro
+INSERT INTO tb_eletrocentro VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(me) FROM tb_modeloEletrocentro me WHERE me.modelo = 'ModeloX'), (SELECT REF(sc) FROM tb_seColetora sc WHERE sc.id = 1));
+
+-- Inserindo dados na tb_instalacao
+INSERT INTO tb_instalacao VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(ec) FROM tb_eletrocentro ec WHERE ec.id_eletrocentro = 1));
+
+-- Inserindo dados na tb_medidorPontoDeConexao
+INSERT INTO tb_medidorinstalacao VALUES (1, 456, 2, (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
+
+-- Inserindo dados na tb_conjunto
+INSERT INTO tb_conjunto VALUES (1, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloInv1'), NULL, (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
