@@ -190,7 +190,9 @@ CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
     id_medidor NUMBER,
     num_de_serie NUMBER,
     num_prioridade NUMBER,
-    pontoConexao REF tp_pontoConexao
+    timestamp_geracao timestamp,
+    potencia NUMBER,
+    geracaopontodeconexao REF tp_pontoConexao
 );
 /
 
@@ -199,6 +201,8 @@ CREATE OR REPLACE TYPE tp_MedidorseColetora AS OBJECT
     id_medidor NUMBER,
     num_prioridade NUMBER,
     num_serie NUMBER,
+    potencia NUMBER,
+    timestamp_geracao timestamp,
     geracaoSeColetora REF tp_seColetora
 );
 /
@@ -208,9 +212,10 @@ CREATE OR REPLACE TYPE tp_medidorEletrocentro AS OBJECT
     id_medidor NUMBER,
     num_serie NUMBER,
     num_prioridade NUMBER,
-    eletrocentro REF tp_eletrocentro
+    geracaoeletrocentro REF tp_eletrocentro
 );
 /
+
 
 CREATE OR REPLACE TYPE tp_negocia AS OBJECT
 (
@@ -240,7 +245,7 @@ CREATE OR REPLACE TYPE tp_temp_operacao AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tb_modelopainel AS OBJECT
+CREATE OR REPLACE TYPE tp_modelopainel AS OBJECT
 (
     modelo varchar2(40),
     fabricante varchar2(40),
@@ -251,11 +256,25 @@ CREATE OR REPLACE TYPE tb_modelopainel AS OBJECT
 );
 /
 
+CREATE OR REPLACE TYPE tp_medidorinstalacao AS OBJECT
+(
+    id_medidor number,
+    num_serie number,
+    num_prioridade number,
+    potencia number,
+    registro_timestamp timestamp
+);
+/
+
+CREATE TYPE tp_nt_medidorinstalacao AS TABLE of tp_medidorinstalacao;
+/
+
 CREATE OR REPLACE TYPE tp_instalacao AS OBJECT
 (
     id_instalacao number,
     localizacao tp_localizacao,
-    seconectaeletrocentro REF tp_eletrocentro
+    seconectaeletrocentro REF tp_eletrocentro,
+    geracao_medidorinstalacao tp_nt_medidorinstalacao
 );
 /
 
@@ -263,19 +282,11 @@ CREATE OR REPLACE TYPE tp_conjunto AS OBJECT
 (
     id number,
     seconectaModeloinversor REF tp_modeloinversor,
-    possuimodelopainel REF tb_modelopainel,
-    conjuntoproduz REF tp_instalacao
+    possuimodelopainel REF tp_modelopainel,
+    produz_conjunto REF tp_instalacao
 );
 /
 
-CREATE OR REPLACE TYPE tp_medidorinstalacao AS OBJECT
-(
-    id_medidor number,
-    num_serie number,
-    num_prioridade number,
-    geracaoinstalacao REF tp_instalacao
-);
-/
     
 CREATE OR REPLACE TYPE tp_operador AS OBJECT
 (
@@ -289,72 +300,20 @@ CREATE OR REPLACE TYPE tp_operador AS OBJECT
 );
 /
 
-CREATE TYPE tp_lista_negociacoes AS TABLE OF tp_negocia;
-/
-
-CREATE TYPE tp_lista_medidorPontoDeConexao AS TABLE OF tp_medidorPontoDeConexao;
-/
-
-CREATE TYPE tp_lista_medidorEletrocentro AS TABLE OF tp_medidorEletrocentro;
-/
-
-CREATE TYPE tp_lista_MedidorseColetora AS TABLE OF tp_MedidorseColetora;
-/
-
-CREATE TYPE tp_lista_medidorinstalacao AS TABLE OF tp_medidorinstalacao;
-/
-
 --Criando tabelas:
 
+-- Tabela para tb_pessoa
 CREATE TABLE tb_pessoa OF tp_pessoa
 (
     id PRIMARY KEY
 );
 /
 
-CREATE TABLE tb_possuiGeracaoPontoDeConexao
+-- Tabela para tb_pontodeConexao
+CREATE TABLE tb_pontodeConexao of tp_pontoconexao
 (
-    timestamp_geracao DATE,
-    potencia NUMBER,
-    GeracaoPontoConexao tp_lista_medidorPontoDeConexao
-) NESTED TABLE GeracaoPontoConexao STORE AS tb_pontoConexao;
-/
-    
-CREATE TABLE tb_seColetora OF tp_seColetora
-(
-    PRIMARY KEY (id)
+    id PRIMARY KEY
 );
-/
-
-CREATE TABLE tb_geracaoEletrocentro
-(
-    potencia NUMBER,
-    timestamp_geracao DATE,
-    medidorEletrocentro tp_lista_medidorEletrocentro
-) NESTED TABLE medidorEletrocentro STORE AS tb_medidorEletrocentro;
-/
-
-CREATE TABLE tb_geracaoinstalacao
-(
-    timestamp_geracaoInstalacao date,
-    potencia number,
-    medidoresinstalacao tp_lista_medidorinstalacao
-) NESTED TABLE medidoresinstalacao STORE AS tb_medidorgeracaoinstalacao;
-/
-
-CREATE TABLE tb_geracaoSEColetora
-(
-    potencia NUMBER,
-    timestamp_medidor DATE,
-    geracaoMedidor tp_lista_MedidorseColetora
-) NESTED TABLE geracaoMedidor STORE AS tb_medidorseColetora;
-/
-
-CREATE TABLE tb_lista_negociacoes 
-(
-    idNegociacao NUMBER PRIMARY KEY,
-    negociacoes tp_lista_negociacoes
-) NESTED TABLE negociacoes STORE AS tb_negociacoes;
 /
 
 -- Tabela para tp_produtoEnergia
@@ -371,25 +330,6 @@ CREATE TABLE tb_modeloEletrocentro OF tp_modeloEletrocentro
 );
 /
 
--- Tabela para tp_eletrocentro
-CREATE TABLE tb_eletrocentro OF tp_eletrocentro
-(
-    id_eletrocentro PRIMARY KEY
-);
-/
--- Tabela para tp_medidorPontoDeConexao
-CREATE TABLE tb_medidorPontoDeConexao OF tp_medidorPontoDeConexao
-(
-    id_medidor PRIMARY KEY
-);
-/
-
--- Tabela para tp_negocia
-CREATE TABLE tb_negocia OF tp_negocia
-(
-    idNegociacao PRIMARY KEY
-);
-/
 -- Tabela para tb_modeloinversor
 CREATE TABLE tb_modeloinversor OF tp_modeloinversor
 (
@@ -397,36 +337,100 @@ CREATE TABLE tb_modeloinversor OF tp_modeloinversor
 );
 /
 
+-- Tabela para tb_modelopainel
+CREATE TABLE tb_modelopainel OF tp_modelopainel
+(
+    modelo PRIMARY KEY
+);
+/
+
+-- Tabela para tp_negocia
+CREATE TABLE tb_negocia OF tp_negocia
+(
+    idNegociacao PRIMARY KEY,
+    pessoaNegocia WITH ROWID REFERENCES tb_pessoa,
+    produtoEnergiaNegocia WITH ROWID REFERENCES tb_produtoEnergia,
+    pontoConexaoNegocia WITH ROWID REFERENCES tb_pontodeConexao
+
+);
+/ 
+
+-- Tabela para tb_seColetora
+CREATE TABLE tb_seColetora OF tp_seColetora
+(
+    id PRIMARY KEY,
+    seConecta WITH ROWID REFERENCES tb_pontodeConexao
+);
+/
+
+-- Tabela para tp_eletrocentro
+CREATE TABLE tb_eletrocentro OF tp_eletrocentro
+(
+    id_eletrocentro PRIMARY KEY,
+    eletrocentro WITH ROWID REFERENCES tb_modeloEletrocentro,
+    eletrocentroseconectacoletora WITH ROWID REFERENCES tb_secoletora
+);
+/ 
+
+-- Tabela para tb_medidorEletrocentro
+CREATE TABLE tb_medidorEletrocentro of tp_medidorEletrocentro
+(
+    id_medidor PRIMARY KEY,
+    geracaoeletrocentro WITH ROWID REFERENCES tb_eletrocentro
+    
+);
+/
+
 -- Tabela para tp_instalacao
 CREATE TABLE tb_instalacao OF tp_instalacao
 (
-    id_instalacao PRIMARY KEY
-);
+    id_instalacao PRIMARY KEY,
+    seconectaeletrocentro WITH ROWID REFERENCES tb_eletrocentro
+) NESTED TABLE geracao_medidorinstalacao STORE AS nt_medidorinstalacao;
 /
--- Tabela para tp_conjunto
-CREATE TABLE tb_conjunto OF tp_conjunto
-(
-    id PRIMARY KEY
-);
-/
--- Tabela para tp_medidorinstalacao
-CREATE TABLE tb_medidorinstalacao OF tp_medidorinstalacao
-(
-    id_medidor PRIMARY KEY
-);
-/
+
 -- Tabela para tp_operador
 CREATE TABLE tb_operador OF tp_operador
 (
-    matricula PRIMARY KEY
+    matricula PRIMARY KEY,
+    supervisor SCOPE IS tb_operador,
+    atuaemeletrocentro WITH ROWID REFERENCES tb_eletrocentro,
+    atuaemInstalacao WITH ROWID REFERENCES tb_instalacao
+
 );
 /
+
+-- Tabela para tp_conjunto
+CREATE TABLE tb_conjunto OF tp_conjunto
+(
+    id PRIMARY KEY,
+    seconectaModeloinversor WITH ROWID REFERENCES tb_modeloinversor,
+    possuimodelopainel WITH ROWID REFERENCES tb_modelopainel,
+    produz_conjunto WITH ROWID REFERENCES tb_instalacao
+);
+/
+
+-- Tabela para tp_medidorPontoDeConexao
+CREATE TABLE tb_medidorPontoDeConexao of tp_medidorPontoDeConexao
+(
+    id_medidor PRIMARY KEY,
+    geracaopontodeconexao WITH ROWID REFERENCES tb_pontodeconexao
+);
+/
+
+-- Tabela para tb_medidorsecoletora
+CREATE TABLE tb_medidorsecoletora of tp_medidorsecoletora
+(
+    id_medidor PRIMARY KEY,
+    geracaosecoletora WITH ROWID REFERENCES tb_seColetora
+);
+/ 
 
 --Alteração:
 ALTER TYPE tp_modeloinversor DROP ATTRIBUTE pot_max_cc CASCADE;
 
 
---Inserindo valores
+--Inserindo valores ! como modifiquei algumas coisas das tabelas é possivel que precise fazer alterações nessa parte do codigo !
 
 -- Inserindo dados na tb_pessoa
 INSERT INTO tb_pessoa VALUES (1, 'João', lista_tp_fone(tp_telefone('11', '123456789'), tp_telefone('22', '987654321')));
@@ -440,8 +444,6 @@ INSERT INTO tb_eletrocentro VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT
 -- Inserindo dados na tb_instalacao
 INSERT INTO tb_instalacao VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(ec) FROM tb_eletrocentro ec WHERE ec.id_eletrocentro = 1));
 
--- Inserindo dados na tb_medidorPontoDeConexao
-INSERT INTO tb_medidorinstalacao VALUES (1, 456, 2, (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
 
 -- Inserindo dados na tb_conjunto
 INSERT INTO tb_conjunto VALUES (1, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloInv1'), NULL, (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
