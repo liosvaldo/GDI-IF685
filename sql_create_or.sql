@@ -62,11 +62,11 @@ CREATE OR REPLACE TYPE tp_identificacaoSistema AS OBJECT
 
 CREATE OR REPLACE TYPE tp_telefone AS OBJECT 
 (
-    cod_area VARCHAR2(2),
+    cod_area VARCHAR2(2), -- não utiliza cod area em telefone
     fone VARCHAR2(10),
 
     -- ORDER MEMBER FUNCTION
-    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER
+    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER -- Porque?
 );
 /
 
@@ -75,7 +75,7 @@ CREATE TYPE BODY tp_telefone AS
     ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER IS
     BEGIN
         -- Implemente a lógica de comparação aqui e retorne -1, 0 ou 1
-        -- dependendo da relação de ordem entre o telefone atual e outro_telefone.
+            -- dependendo da relação de ordem entre o telefone atual e outro_telefone.
         -- Exemplo simples:
         IF SELF.cod_area < another_telefone.cod_area THEN
             RETURN -1;
@@ -99,7 +99,7 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT
 
     CONSTRUCTOR FUNCTION tp_pessoa(SELF IN OUT NOCOPY tp_pessoa, ID NUMBER, Nome VARCHAR2, Telefones lista_tp_fone) RETURN SELF AS RESULT,
     MAP MEMBER FUNCTION obter_cod_area RETURN VARCHAR2
-) NOT FINAL;
+) NOT FINAL NOT INSTANTIABLE; -- não instanciavel
 /
 
 CREATE OR REPLACE TYPE BODY tp_pessoa AS
@@ -125,7 +125,7 @@ END;
 CREATE OR REPLACE TYPE tp_pessoaFisica UNDER tp_pessoa
 (
     cpf NUMBER
-) NOT FINAL NOT INSTANTIABLE;
+) FINAL;
 / 
 -- caso fosse criar clientes.
 
@@ -185,7 +185,7 @@ CREATE OR REPLACE TYPE tp_eletrocentro AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
+CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT -- atenção nele
 (
     id_medidor NUMBER,
     num_de_serie NUMBER,
@@ -196,7 +196,7 @@ CREATE OR REPLACE TYPE tp_medidorPontoDeConexao AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_MedidorseColetora AS OBJECT
+CREATE OR REPLACE TYPE tp_MedidorSEColetora AS OBJECT -- atenção nele
 (
     id_medidor NUMBER,
     num_prioridade NUMBER,
@@ -207,7 +207,7 @@ CREATE OR REPLACE TYPE tp_MedidorseColetora AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_medidorEletrocentro AS OBJECT
+CREATE OR REPLACE TYPE tp_medidorEletrocentro AS OBJECT -- atenção nele
 (
     id_medidor NUMBER,
     num_serie NUMBER,
@@ -269,7 +269,7 @@ CREATE OR REPLACE TYPE tp_medidorinstalacao AS OBJECT
 CREATE TYPE tp_nt_medidorinstalacao AS TABLE of tp_medidorinstalacao;
 /
 
-CREATE OR REPLACE TYPE tp_instalacao AS OBJECT
+CREATE OR REPLACE TYPE tp_instalacao AS OBJECT -- isso ta errado, falta operador, e não o aocontrario. Necessário uma lista de operadores e um supervisor
 (
     id_instalacao number,
     localizacao tp_localizacao,
@@ -310,7 +310,7 @@ CREATE TABLE tb_pessoa OF tp_pessoa
 /
 
 -- Tabela para tb_pontodeConexao
-CREATE TABLE tb_pontodeConexao of tp_pontoconexao
+CREATE TABLE tb_pontodeConexao of tp_pontoConexao
 (
     id PRIMARY KEY
 );
@@ -419,7 +419,7 @@ CREATE TABLE tb_medidorPontoDeConexao of tp_medidorPontoDeConexao
 /
 
 -- Tabela para tb_medidorsecoletora
-CREATE TABLE tb_medidorsecoletora of tp_medidorsecoletora
+CREATE TABLE tb_medidorsecoletora of tp_MedidorSEColetora
 (
     id_medidor PRIMARY KEY,
     geracaosecoletora WITH ROWID REFERENCES tb_seColetora
@@ -432,18 +432,68 @@ ALTER TYPE tp_modeloinversor DROP ATTRIBUTE pot_max_cc CASCADE;
 
 --Inserindo valores ! como modifiquei algumas coisas das tabelas é possivel que precise fazer alterações nessa parte do codigo !
 
--- Inserindo dados na tb_pessoa
-INSERT INTO tb_pessoa VALUES (1, 'João', lista_tp_fone(tp_telefone('11', '123456789'), tp_telefone('22', '987654321')));
+-- Inserindo dados na Tb_pontoConexao
+INSERT INTO tb_pontodeConexao VALUES (1, tp_endereco('RECIFE', 'PE'), tp_localizacao(12.9512, 45.1234), tp_identificacaoSistema('RIO DAS PEDRAS', '15KVA');
+INSERT INTO tb_pontodeConexao VALUES (2, tp_endereco('OLINDA', 'PE'), tp_localizacao(15.9512, 41.1234), tp_identificacaoSistema('XINGO', '150KVA');
+INSERT INTO tb_pontodeConexao VALUES (3, tp_endereco('MATO GROSSO', 'MS'), tp_localizacao(17.9512, 38.1234), tp_identificacaoSistema('SAO FRANSCISCO', '500KVA');
+
+-- Insert dados na tb_medidorPontoDeConexao
+INSERT INTO tb_medidorPontoDeConexao VALUES (1, 1234, 1, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 1));
+INSERT INTO tb_medidorPontoDeConexao VALUES (2, 1233, 2, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 2));
+INSERT INTO tb_medidorPontoDeConexao VALUES (3, 1232, 1, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 3));
+
+-- Inserindo dados na tb_seColetora
+INSERT INTO tb_seColetora VALUES (1, 12000, 1.5, tp_localizacao(15.9123, 45.9013), tp_id_sistema('SERRA DAS VACAS', 750), (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 1));
+INSERT INTO tb_seColetora VALUES (2, 15000, 1.1, tp_localizacao(15.9133, 45.6013), tp_id_sistema('SERRA DO MEL', 550), (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 2));
+INSERT INTO tb_seColetora VALUES (3, 22000, 1.3, tp_localizacao(15.9143, 45.6113), tp_id_sistema('RIO DAS VACAS', 650), (SELECT REF(pc) FROM tb_pontoConexao pc WHERE pc.id = 3));
+
+-- Inserindo dados na tb_medidorsecoletora
+INSERT INTO tb_medidorsecoletora VALUES (1, 1234, 1, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(se) FROM tb_seColetora se WHERE se.id = 1));
+INSERT INTO tb_medidorsecoletora VALUES (2, 1233, 1, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(se) FROM tb_seColetora se WHERE se.id = 2));
+INSERT INTO tb_medidorsecoletora VALUES (3, 1235, 1, to_date('05/04/2024 12:34:00' , 'DD/mm/yyyy HH:MM:SS'), 35, (SELECT REF(se) FROM tb_seColetora se WHERE se.id = 3));
 
 -- Inserindo dados na tb_modeloEletrocentro
-INSERT INTO tb_modeloEletrocentro VALUES ('ModeloX', 'FabricanteX', 220, '4 horas', 100, 50);
+INSERT INTO tb_modeloEletrocentro VALUES ('ModeloX', 'FabricanteX', 220, '4 horas', 100, 100);
+INSERT INTO tb_modeloEletrocentro VALUES ('ModeloY', 'FabricanteY', 380, '2 horas', 100, 50);
+INSERT INTO tb_modeloEletrocentro VALUES ('ModeloZ', 'FabricanteZ', 500, '7 horas', 100, 300);
 
 -- Inserindo dados na tb_eletrocentro
 INSERT INTO tb_eletrocentro VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(me) FROM tb_modeloEletrocentro me WHERE me.modelo = 'ModeloX'), (SELECT REF(sc) FROM tb_seColetora sc WHERE sc.id = 1));
+INSERT INTO tb_eletrocentro VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(me) FROM tb_modeloEletrocentro me WHERE me.modelo = 'ModeloY'), (SELECT REF(sc) FROM tb_seColetora sc WHERE sc.id = 2));
+INSERT INTO tb_eletrocentro VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(me) FROM tb_modeloEletrocentro me WHERE me.modelo = 'Modelo|'), (SELECT REF(sc) FROM tb_seColetora sc WHERE sc.id = 3));
+
+-- Inserindo dados na tb_medidorEletrocentro
+INSERT INTO tb_medidorEletrocentro VALUES (1, 1234, 1, (SELECT REF(ele) FROM tb_eletrocentro ele WHERE ele.id_eletrocentro = 1));
+INSERT INTO tb_medidorEletrocentro VALUES (2, 1134, 1, (SELECT REF(ele) FROM tb_eletrocentro ele WHERE ele.id_eletrocentro = 2));
+INSERT INTO tb_medidorEletrocentro VALUES (3, 2234, 1, (SELECT REF(ele) FROM tb_eletrocentro ele WHERE ele.id_eletrocentro = 3));
+
+-- Inserindo dados na tb_modeloinversor
+INSERT INTO tb_modeloinversor VALUES ('modeloinversorX', 220, 2, 380, 1300, 'vestas');
+INSERT INTO tb_modeloinversor VALUES ('modeloinversorY', 127, 3, 220, 3800, 'siemens');
+INSERT INTO tb_modeloinversor VALUES ('modeloinversorZ', 440, 5, 580, 4300, 'rockwell');
+
+-- Inserindo dados na tb_modelopainel
+INSERT INTO tb_modelopainel VALUES ('modelopainelX', 'vestas', 220, 250, 150, tp_temp_operacao(100, -20));
+INSERT INTO tb_modelopainel VALUES ('modelopainelY', 'siemens', 380, 400, 200, tp_temp_operacao(100, -20));
+INSERT INTO tb_modelopainel VALUES ('modelopainelZ', 'rockwell', 127, 150, 110, tp_temp_operacao(100, -20));
 
 -- Inserindo dados na tb_instalacao
 INSERT INTO tb_instalacao VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(ec) FROM tb_eletrocentro ec WHERE ec.id_eletrocentro = 1));
-
+INSERT INTO tb_instalacao VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(ec) FROM tb_eletrocentro ec WHERE ec.id_eletrocentro = 2));
+INSERT INTO tb_instalacao VALUES (1, tp_localizacao(12.9714, 77.5946), (SELECT REF(ec) FROM tb_eletrocentro ec WHERE ec.id_eletrocentro = 3));
 
 -- Inserindo dados na tb_conjunto
-INSERT INTO tb_conjunto VALUES (1, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloInv1'), NULL, (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
+INSERT INTO tb_conjunto VALUES (1, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloinversorX'), (SELECT REF(pn) FROM tb_modelopainel pn WHERE pn.modelo = 'modelopainelX'), (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 1));
+INSERT INTO tb_conjunto VALUES (2, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloinversorY'), (SELECT REF(pn) FROM tb_modelopainel pn WHERE pn.modelo = 'modelopainelY'), (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 2));
+INSERT INTO tb_conjunto VALUES (3, (SELECT REF(mi) FROM tb_modeloinversor mi WHERE mi.modelo = 'ModeloinversorZ'), (SELECT REF(pn) FROM tb_modelopainel pn WHERE pn.modelo = 'modelopainelZ'), (SELECT REF(i) FROM tb_instalacao i WHERE i.id_instalacao = 3));
+
+
+-- Inserindo dados na tb_endereco
+
+
+-- Inserindo dados na tb_pessoa
+INSERT INTO tb_pessoa VALUES (1, 'João', lista_tp_fone(tp_telefone('11', '123456789'), tp_telefone('22', '987654321')));
+INSERT INTO tb_pessoa VALUES (2, 'Maria', lista_tp_fone(tp_telefone('22', '123456789'), tp_telefone('33', '987654321')));
+INSERT INTO tb_pessoa VALUES (3, 'Pedro', lista_tp_fone(tp_telefone('33', '123456789'), tp_telefone('44', '987654321')));
+
+
