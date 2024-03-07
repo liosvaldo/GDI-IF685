@@ -516,13 +516,68 @@ INSERT INTO tb_operador VALUES (1233, 'Supervisor2', 456, NULL, NULL);
 INSERT INTO tb_operador VALUES (789, 'Operador1', 012, NULL, (SELECT REF(o) FROM tb_operador o WHERE o.matricula = 123));
 
 
--- Consultas
+-------------------------------- Consultas --------------------------------------------------------------
 
 -- Consulta simples:
 
+-- tabela pessoa
+
 SELECT p.nome, T.cod_area AS cod_area, T.fone AS fone FROM tb_pessoa p, TABLE(p.telefones) T;
 
--- Consulta usando REF
+-- tabela produtoenergia
+
+SELECT id_produto, quantidade_kw, data_venda, prazo_entrega
+FROM tb_produtoEnergia;
+
+-- tabela modeloEletrocentro
+
+SELECT modelo, fabricante, tensao_nom, autonomia_baterias, corr_max_baterias, pont_nom
+FROM tb_modeloEletrocentro;
+
+-- tabela modeloinversor
+
+SELECT modelo, pot_nom_ca, num_entradas_cc, pot_max_ca, fabricante
+FROM tb_modeloinversor;
+
+-- tabela modelopainel
+
+SELECT
+    modelo,
+    fabricante,
+    pot_max,
+    tensao_max_func,
+    corrente_pico,
+    m.temp_operacao.temp_max AS temp_max,
+    m.temp_operacao.temp_min AS temp_min
+FROM
+    tb_modelopainel m;
+
+-- tabela pontodeConexao
+
+SELECT id, p.endereco.cidade, p.endereco.estado
+FROM tb_pontodeConexao p;
+
+-- tabela medidorsecoletora
+
+SELECT id_medidor, num_prioridade, num_serie, potencia, timestamp_geracao, m.geracaoSeColetora.id_sistema.nome_parque
+FROM tb_medidorsecoletora m;
+
+-- tabela negocia
+
+SELECT idNegociacao, n.pessoaNegocia.nome AS nome_pessoa, n.produtoEnergiaNegocia.quantidade_kw, n.pontoConexaoNegocia.endereco.cidade AS cidade_ponto_conexao
+FROM tb_negocia n;
+
+-- tabela secoletora
+
+SELECT id, tensao_nom, taxa_de_conversao, c.localizacao.latitude, c.localizacao.longitude, c.id_sistema.nome_parque
+FROM tb_seColetora c;
+
+-- tabela medidorpontodeconexao
+
+SELECT id_medidor, num_de_serie, num_prioridade, timestamp_geracao, potencia, m.geracaopontodeconexao.endereco.cidade AS cidade_ponto_conexao
+FROM tb_medidorPontoDeConexao m;
+
+-------------------------------- Consulta usando REF ----------------------------------------------------
 
 SELECT
     o.matricula,
@@ -551,7 +606,7 @@ WHERE
 
 
 
--- consulta com DEREF
+-------------------------------- consulta com DEREF -----------------------------------------------------
 
 SELECT
   nc.idNegociacao,
@@ -566,7 +621,7 @@ WHERE
   nc.idNegociacao = 1;
 
 
--- consulta à VARRAY
+-------------------------------- consulta à VARRAY ------------------------------------------------------
 
 SELECT
   p.id,
@@ -578,7 +633,7 @@ SELECT
 FROM
   tb_pessoa p, TABLE(p.telefones) T
 
--- consulta à NESTED TABLE
+-------------------------------- consulta à NESTED TABLE ------------------------------------------------
 SELECT
     ec.id_eletrocentro,
     o.matricula AS matricula_operador,
