@@ -521,7 +521,19 @@ INSERT INTO tb_operador VALUES (789, 'Operador1', 012, NULL, (SELECT REF(o) FROM
 -- Consulta simples:
 
 SELECT p.nome, T.cod_area AS cod_area, T.fone AS fone FROM tb_pessoa p, TABLE(p.telefones) T;
+
 -- consulta usando REF
+SELECT
+    o.matricula,
+    o.nome,
+    o.cpf,
+    o.endereco.cidade AS cidade_operador,
+    o.endereco.estado AS estado_operador
+FROM
+    tb_operador o
+WHERE
+    REF(o) IS NOT NULL;
+
 
 -- consulta com DEREF
 
@@ -538,7 +550,7 @@ WHERE
   nc.idNegociacao = 1;
 
 
--- consulta com VARRAY
+-- consulta à VARRAY
 
 SELECT
   p.id,
@@ -549,5 +561,19 @@ SELECT
   T.fone AS telefone2
 FROM
   tb_pessoa p, TABLE(p.telefones) T
-WHERE
-  p.id = 1;
+
+-- consulta à NESTED TABLE
+SELECT
+    ec.id_eletrocentro,
+    o.matricula AS matricula_operador,
+    o.nome AS nome_operador,
+    o.cpf AS cpf_operador,
+    o.endereco.cidade AS cidade_operador,
+    o.endereco.estado AS estado_operador,
+    o.endereco.cep AS cep_operador,
+    o.endereco.rua AS rua_operador,
+    o.endereco.numero AS numero_operador,
+    o.endereco.complemento AS complemento_operador
+FROM
+    tb_eletrocentro ec,
+    TABLE(ec.lista_operadores) o;
