@@ -522,7 +522,22 @@ INSERT INTO tb_operador VALUES (789, 'Operador1', 012, NULL, (SELECT REF(o) FROM
 
 SELECT p.nome, T.cod_area AS cod_area, T.fone AS fone FROM tb_pessoa p, TABLE(p.telefones) T;
 
--- consulta usando REF
+-- Consulta usando REF
+
+SELECT
+    o.matricula,
+    o.nome,
+    o.cpf,
+    DEREF(o.supervisor).nome AS nome_supervisor,
+    o.endereco.cidade AS cidade_operador,
+    o.endereco.estado AS estado_operador
+FROM
+    tb_operador o
+WHERE
+    REF(o) IS NOT NULL;
+
+-- Outro exemplo com REF
+
 SELECT
     o.matricula,
     o.nome,
@@ -532,7 +547,8 @@ SELECT
 FROM
     tb_operador o
 WHERE
-    REF(o) IS NOT NULL;
+    REF(o) = (SELECT REF(o_supervisor) FROM tb_operador o_supervisor WHERE o_supervisor.matricula = 123);
+
 
 
 -- consulta com DEREF
