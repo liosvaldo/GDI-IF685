@@ -147,11 +147,45 @@ CREATE OR REPLACE TYPE BODY tp_pessoa AS
 END;
 /
     
+-- Criação do subtipo tp_pessoaFisica
 CREATE OR REPLACE TYPE tp_pessoaFisica UNDER tp_pessoa
 (
-    cpf NUMBER
+    cpf NUMBER,
+    OVERRIDING MEMBER FUNCTION obter_cod_area RETURN VARCHAR2,
+    CONSTRUCTOR FUNCTION tp_pessoaFisica(
+        SELF IN OUT NOCOPY tp_pessoaFisica,
+        ID NUMBER,
+        Nome VARCHAR2,
+        Telefones lista_tp_fone,
+        CPF NUMBER
+    ) RETURN SELF AS RESULT
 ) FINAL;
-/ 
+/
+
+CREATE OR REPLACE TYPE BODY tp_pessoaFisica AS
+    OVERRIDING MEMBER FUNCTION obter_cod_area RETURN VARCHAR2 IS
+        result VARCHAR2(4000);
+    BEGIN
+        -- Adicione a lógica específica para obter códigos de área em tp_pessoaFisica
+        result := 'Código de Área para Pessoa Física: ' || TO_CHAR(self.cpf);
+        RETURN result;
+    END obter_cod_area;
+
+    CONSTRUCTOR FUNCTION tp_pessoaFisica(
+        SELF IN OUT NOCOPY tp_pessoaFisica,
+        ID NUMBER,
+        Nome VARCHAR2,
+        Telefones lista_tp_fone,
+        CPF NUMBER
+    ) RETURN SELF AS RESULT IS
+    BEGIN
+        SELF.id := ID;
+        SELF.nome := Nome;
+        SELF.telefones := Telefones;
+        SELF.cpf := CPF;
+        RETURN;
+    END;
+/
 -- caso fosse criar clientes.
 
 CREATE OR REPLACE TYPE tp_pessoaJuridica UNDER tp_pessoa
@@ -770,5 +804,29 @@ BEGIN
     -- Chamando o membro de procedimento exibir_informacoes para mostrar novas informações
     DBMS_OUTPUT.PUT_LINE('Novas Informações:');
     id_sistema.exibir_informacoes('Parque Solar B', 600);
+END;
+/
+
+
+-------------------------------- demonstrção de funções (OVERRIDING) ---------------------------------------------------
+
+-- Exemplo de Uso
+DECLARE
+    pessoa tp_pessoa;
+    pessoa_fisica tp_pessoaFisica;
+    telefones lista_tp_fone := lista_tp_fone(tp_telefone('11', '123456789'));
+
+BEGIN
+    -- Criar instância de tp_pessoa
+    pessoa := tp_pessoa(1, 'João', telefones);
+
+    -- Chamar o método MAP MEMBER
+    DBMS_OUTPUT.PUT_LINE('Códigos de Área para Pessoa: ' || pessoa.obter_cod_area);
+
+    -- Criar instância de tp_pessoaFisica
+    pessoa_fisica := tp_pessoaFisica(2, 'Maria', telefones, '12345678901');
+
+    -- Chamar o método MAP MEMBER sobrescrito
+    DBMS_OUTPUT.PUT_LINE('Códigos de Área para Pessoa Física: ' || pessoa_fisica.obter_cod_area);
 END;
 /
