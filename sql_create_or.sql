@@ -45,12 +45,64 @@ CREATE OR REPLACE TYPE tp_localizacao AS OBJECT
     longitude NUMBER
 );
 /
-
-CREATE OR REPLACE TYPE tp_id_sistema AS OBJECT
-(
+    
+-- Correção no tipo tp_id_sistema
+CREATE OR REPLACE TYPE tp_id_sistema AS OBJECT (
     nome_parque VARCHAR2(40),
-    pot_nom NUMBER
+    pot_nom NUMBER,
+
+    MEMBER PROCEDURE exibir_detalhes,
+
+    MEMBER PROCEDURE exibir_informacoes(novo_nome_parque VARCHAR2, nova_pot_nom NUMBER)
 );
+/
+
+-- Correção no corpo do tipo tp_id_sistema
+CREATE OR REPLACE TYPE BODY tp_id_sistema AS
+    MEMBER PROCEDURE exibir_detalhes IS
+    BEGIN
+        DBMS_OUTPUT.PUT_LINE('Nome do Parque: ' || nome_parque);
+        DBMS_OUTPUT.PUT_LINE('Potência Nominal: ' || pot_nom);
+    END exibir_detalhes;
+
+    MEMBER PROCEDURE exibir_informacoes(novo_nome_parque VARCHAR2, nova_pot_nom NUMBER) IS
+    BEGIN
+        DBMS_OUTPUT.PUT_LINE('Novo Nome do Parque: ' || novo_nome_parque);
+        DBMS_OUTPUT.PUT_LINE('Nova Potência Nominal: ' || nova_pot_nom);
+    END exibir_informacoes;
+END;
+/
+
+-- Correção no tipo tp_telefone (removendo ponto e vírgula no final)
+CREATE OR REPLACE TYPE tp_telefone AS OBJECT 
+(
+    cod_area VARCHAR2(2),
+    fone VARCHAR2(10),
+
+    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER
+);
+/
+
+CREATE OR REPLACE TYPE BODY tp_telefone AS
+    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER IS
+    BEGIN
+        -- Comparação considerando cod_area e fone
+        IF SELF.cod_area < another_telefone.cod_area THEN
+            RETURN -1;
+        ELSIF SELF.cod_area > another_telefone.cod_area THEN
+            RETURN 1;
+        ELSE
+            -- Se cod_area for o mesmo, compare fone
+            IF SELF.fone < another_telefone.fone THEN
+                RETURN -1;
+            ELSIF SELF.fone > another_telefone.fone THEN
+                RETURN 1;
+            ELSE
+                RETURN 0; -- Se ambos cod_area e fone forem iguais
+            END IF;
+        END IF;
+    END compare;
+END;
 /
 
 CREATE OR REPLACE TYPE tp_identificacaoSistema AS OBJECT
@@ -58,34 +110,6 @@ CREATE OR REPLACE TYPE tp_identificacaoSistema AS OBJECT
     nome VARCHAR2(40),
     pot_nome VARCHAR2(40)
 );
-/
-
-CREATE OR REPLACE TYPE tp_telefone AS OBJECT 
-(
-    cod_area VARCHAR2(2), -- não utiliza cod area em telefone
-    fone VARCHAR2(10),
-
-    -- ORDER MEMBER FUNCTION
-    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER -- Porque?
-);
-/
-
-CREATE TYPE BODY tp_telefone AS
-    -- ORDER MEMBER FUNCTION Implementation
-    ORDER MEMBER FUNCTION compare(another_telefone tp_telefone) RETURN NUMBER IS
-    BEGIN
-        -- Implemente a lógica de comparação aqui e retorne -1, 0 ou 1
-            -- dependendo da relação de ordem entre o telefone atual e outro_telefone.
-        -- Exemplo simples:
-        IF SELF.cod_area < another_telefone.cod_area THEN
-            RETURN -1;
-        ELSIF SELF.cod_area > another_telefone.cod_area THEN
-            RETURN 1;
-        ELSE
-            RETURN 0;
-        END IF;
-    END compare;
-END;
 /
 
 CREATE TYPE lista_tp_fone AS VARRAY(2) OF tp_telefone;
@@ -221,11 +245,27 @@ CREATE OR REPLACE TYPE tp_modeloinversor AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE tp_temp_operacao AS OBJECT
-(
-    temp_max number,
-    temp_min number
+-- Criação de um tipo de dados UDT com métodos
+CREATE TYPE tp_temp_operacao AS OBJECT (
+    temp_max NUMBER,
+    temp_min NUMBER,
+    MEMBER FUNCTION calcularMedia RETURN NUMBER,
+    STATIC FUNCTION temperaturaAlta(temp tp_temp_operacao) RETURN BOOLEAN
 );
+/
+
+-- Implementação dos métodos
+CREATE TYPE BODY tp_temp_operacao AS
+    MEMBER FUNCTION calcularMedia RETURN NUMBER IS
+    BEGIN
+        RETURN (temp_max + temp_min) / 2;
+    END calcularMedia;
+
+    STATIC FUNCTION temperaturaAlta(temp tp_temp_operacao) RETURN BOOLEAN IS
+    BEGIN
+        RETURN temp.temp_max > 30;
+    END temperaturaAlta;
+END;
 /
 
 CREATE OR REPLACE TYPE tp_modelopainel AS OBJECT
@@ -432,7 +472,6 @@ CREATE TABLE tb_medidorsecoletora of tp_MedidorSEColetora
 
 --Alteração:
 ALTER TYPE tp_modeloinversor DROP ATTRIBUTE pot_max_cc CASCADE;
-
 
 --Inserindo valores!
 
@@ -648,3 +687,88 @@ SELECT
 FROM
     tb_eletrocentro ec,
     TABLE(ec.lista_operadores) o;
+
+
+
+-------------------------------- demonstrção de funções (MEMBER) ---------------------------------------------------
+
+-- Criando uma instância do tipo tp_temp_operacao
+DECLARE
+    temperatura tp_temp_operacao;
+BEGIN
+    -- Inicializando a instância
+    temperatura := tp_temp_operacao(35, 25);
+
+    -- Chamando o método de instância calcularMedia
+    DBMS_OUTPUT.PUT_LINE('Média das temperaturas: ' || temperatura.calcularMedia);
+
+    -- Chamando o método estático temperaturaAlta
+    IF tp_temp_operacao.temperaturaAlta(temperatura) THEN
+        DBMS_OUTPUT.PUT_LINE('Temperatura alta!');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Temperatura não está alta.');
+    END IF;
+END;
+/
+
+
+-------------------------------- demonstrção de funções (ORDER) ---------------------------------------------------
+
+
+
+-- Criando dois telefones
+DECLARE
+    telefone1 tp_telefone;
+    telefone2 tp_telefone;
+    resultado NUMBER;
+BEGIN
+    -- Inicializando os telefones
+    telefone1 := tp_telefone('12', '555-1234');
+    telefone2 := tp_telefone('34', '555-5678');
+
+    -- Chamando a função compare
+    resultado := telefone1.compare(telefone2);
+
+    -- Exibindo o resultado
+    DBMS_OUTPUT.PUT_LINE('Resultado da comparação: ' || resultado);
+END;
+/
+
+
+-------------------------------- demonstrção de funções (CONSTRUCTOR e MAP) ---------------------------------------------------
+
+
+
+-- Criando uma instância de tp_pessoa utilizando o construtor
+DECLARE
+    lista_telefones lista_tp_fone := lista_tp_fone(tp_telefone('11', '123456789'), tp_telefone('21', '987654321'));
+    
+    -- Criando uma instância de tp_pessoa utilizando o construtor
+    pessoa tp_pessoa := new tp_pessoa(1, 'João', lista_telefones);
+BEGIN
+    -- Acessando o método obter_cod_area através do MAP
+    DBMS_OUTPUT.PUT_LINE('Códigos de Área dos Telefones da Pessoa: ' || pessoa.obter_cod_area());
+    
+    -- Output para sinalizar a construção do objeto
+    DBMS_OUTPUT.PUT_LINE('Objeto tp_pessoa construído com sucesso para: ' || pessoa.nome);
+END;
+/
+
+
+-------------------------------- demonstrção de funções (MEMBER PROCEDURE) ---------------------------------------------------
+
+
+
+DECLARE
+    -- Criando uma instância do tipo tp_id_sistema
+    id_sistema tp_id_sistema := tp_id_sistema('Parque Solar A', 500);
+BEGIN
+    -- Chamando o membro de procedimento exibir_detalhes para mostrar os detalhes iniciais
+    DBMS_OUTPUT.PUT_LINE('Detalhes Iniciais:');
+    id_sistema.exibir_detalhes;
+    
+    -- Chamando o membro de procedimento exibir_informacoes para mostrar novas informações
+    DBMS_OUTPUT.PUT_LINE('Novas Informações:');
+    id_sistema.exibir_informacoes('Parque Solar B', 600);
+END;
+/
